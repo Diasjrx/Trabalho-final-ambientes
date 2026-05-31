@@ -43,9 +43,10 @@ jobs:
         run: npx wait-on http://localhost:3000 --timeout 60000
 
       - name: Executar testes Cypress do Frontend
-        run: npx cypress run --spec "cypress/e2e/frontend.cy.js" --config baseUrl=http://localhost:3000
+        run: npx cypress run --spec "cypress/e2e/frontend.cy.js" --config "baseUrl=http://localhost:3000"
         env:
           CYPRESS_apiUrl: http://localhost:3001
+          CYPRESS_frontendUrl: http://localhost:3000
 
       - name: Upload de screenshots (em caso de falha)
         uses: actions/upload-artifact@v4

@@ -1,13 +1,20 @@
 // cypress/e2e/frontend.cy.js
 // Testes E2E do Frontend — TaskFlow
 
-const FRONTEND = 'http://localhost:3000';
+const FRONTEND = Cypress.env('frontendUrl') || 'http://localhost:3000';
+const API      = Cypress.env('apiUrl')      || 'http://localhost:3001';
+
+// Helper: lê apenas o número do stat (primeiro filho span)
+const getStatNum = (id) =>
+  cy.get(`#${id}`).find('.stat-num').invoke('text').then((t) => parseInt(t.trim()));
 
 describe('Frontend — TaskFlow', () => {
 
   beforeEach(() => {
-    cy.request('POST', `${Cypress.env('apiUrl')}/reset`);
+    cy.request('POST', `${API}/reset`);
     cy.visit(FRONTEND);
+    // Aguarda lista carregar antes de cada teste
+    cy.get('[data-testid="task-item"]', { timeout: 10000 }).should('have.length.at.least', 1);
   });
 
   // ----------------------------------------------------------------
@@ -32,19 +39,18 @@ describe('Frontend — TaskFlow', () => {
     });
 
     it('deve exibir as tarefas iniciais do backend', () => {
-      cy.get('[data-testid="task-list"]').find('[data-testid="task-item"]').should('have.length.at.least', 1);
+      cy.get('[data-testid="task-item"]').should('have.length.at.least', 1);
     });
 
     it('deve exibir os contadores de estatísticas', () => {
-      cy.get('[data-testid="stat-total"]').should('be.visible');
-      cy.get('[data-testid="stat-pending"]').should('be.visible');
-      cy.get('[data-testid="stat-done"]').should('be.visible');
+      cy.get('#stat-total').should('be.visible');
+      cy.get('#stat-pending').should('be.visible');
+      cy.get('#stat-done').should('be.visible');
     });
 
     it('deve mostrar o total correto de tarefas', () => {
       cy.get('[data-testid="task-item"]').then(($items) => {
-        const count = $items.length;
-        cy.get('#stat-total').should('contain.text', String(count));
+        cy.get('#stat-total').find('.stat-num').should('contain.text', String($items.length));
       });
     });
   });
@@ -71,17 +77,16 @@ describe('Frontend — TaskFlow', () => {
         cy.get('[data-testid="task-input"]').type('Nova tarefa contador');
         cy.get('[data-testid="submit-btn"]').click();
         cy.get('[data-testid="task-item"]').should('have.length', before + 1);
-        cy.get('#stat-total').should('contain.text', String(before + 1));
+        cy.get('#stat-total').find('.stat-num').should('contain.text', String(before + 1));
       });
     });
 
     it('deve incrementar pendentes ao adicionar tarefa', () => {
-      cy.get('#stat-pending').invoke('text').then((text) => {
-        const before = parseInt(text.trim());
+      getStatNum('stat-pending').then((before) => {
         cy.get('[data-testid="task-input"]').type('Tarefa pendente nova');
         cy.get('[data-testid="submit-btn"]').click();
-        cy.get('[data-testid="task-item"]').should('have.length.at.least', before + 1);
-        cy.get('#stat-pending').should('contain.text', String(before + 1));
+        cy.contains('Tarefa pendente nova').should('be.visible');
+        cy.get('#stat-pending').find('.stat-num').should('contain.text', String(before + 1));
       });
     });
 
@@ -101,18 +106,15 @@ describe('Frontend — TaskFlow', () => {
   // ----------------------------------------------------------------
   describe('Marcar tarefa como concluída', () => {
     it('deve marcar a primeira tarefa como concluída', () => {
-      cy.get('[data-testid="task-item"]').first().within(() => {
-        cy.get('.task-check').click();
-      });
+      cy.get('[data-testid="task-item"]').first().find('.task-check').click();
       cy.get('[data-testid="task-item"]').first().should('have.class', 'completed');
     });
 
     it('deve atualizar o contador de concluídas', () => {
-      cy.get('#stat-done').invoke('text').then((text) => {
-        const before = parseInt(text.trim());
+      getStatNum('stat-done').then((before) => {
         cy.get('[data-testid="task-item"]').first().find('.task-check').click();
         cy.get('[data-testid="task-item"]').first().should('have.class', 'completed');
-        cy.get('#stat-done').should('contain.text', String(before + 1));
+        cy.get('#stat-done').find('.stat-num').should('contain.text', String(before + 1));
       });
     });
 
@@ -140,7 +142,7 @@ describe('Frontend — TaskFlow', () => {
         const before = $before.length;
         cy.get('[data-testid="task-item"]').first().find('[data-testid^="delete-btn"]').click();
         cy.get('[data-testid="task-item"]').should('have.length', before - 1);
-        cy.get('#stat-total').should('contain.text', String(before - 1));
+        cy.get('#stat-total').find('.stat-num').should('contain.text', String(before - 1));
       });
     });
   });

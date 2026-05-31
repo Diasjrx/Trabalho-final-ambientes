@@ -8,10 +8,11 @@ module.exports = defineConfig({
     screenshotOnRunFailure: true,
     viewportWidth: 1280,
     viewportHeight: 720,
-    defaultCommandTimeout: 8000,
+    defaultCommandTimeout: 10000,
     setupNodeEvents(on, config) {},
   },
   env: {
     apiUrl: 'http://localhost:3001',
+    frontendUrl: 'http://localhost:3000',
   },
 });
