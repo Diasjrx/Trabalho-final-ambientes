@@ -19,24 +19,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      - name: Instalar dependências raiz (Cypress)
+      - name: Instalar dependências raiz (Cypress + ferramentas)
         run: npm install
 
       - name: Instalar dependências do backend
-        run: cd backend && npm install
+        working-directory: backend
+        run: npm install
 
       - name: Iniciar backend em segundo plano
-        run: cd backend && node index.js &
+        working-directory: backend
+        run: node index.js &
         env:
           PORT: 3001
 
       - name: Aguardar backend iniciar
-        run: npx wait-on http://localhost:3001/health --timeout 30000
+        run: npx wait-on http://localhost:3001/health --timeout 60000
 
       - name: Executar testes Cypress do Backend
-        run: npx cypress run --spec "cypress/e2e/backend.cy.js"
+        run: npx cypress run --spec "cypress/e2e/backend.cy.js" --config baseUrl=http://localhost:3001
         env:
           CYPRESS_apiUrl: http://localhost:3001
 

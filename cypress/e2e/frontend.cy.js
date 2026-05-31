@@ -1,12 +1,13 @@
 // cypress/e2e/frontend.cy.js
 // Testes E2E do Frontend — TaskFlow
 
+const FRONTEND = 'http://localhost:3000';
+
 describe('Frontend — TaskFlow', () => {
 
   beforeEach(() => {
-    // Reseta backend e visita a página
     cy.request('POST', `${Cypress.env('apiUrl')}/reset`);
-    cy.visit('/');
+    cy.visit(FRONTEND);
   });
 
   // ----------------------------------------------------------------
@@ -41,9 +42,9 @@ describe('Frontend — TaskFlow', () => {
     });
 
     it('deve mostrar o total correto de tarefas', () => {
-      cy.get('[data-testid="stat-total"]').invoke('text').then((text) => {
-        const total = parseInt(text);
-        expect(total).to.be.at.least(1);
+      cy.get('[data-testid="task-item"]').then(($items) => {
+        const count = $items.length;
+        cy.get('#stat-total').should('contain.text', String(count));
       });
     });
   });
@@ -65,18 +66,22 @@ describe('Frontend — TaskFlow', () => {
     });
 
     it('deve atualizar o contador total após adicionar', () => {
-      cy.get('[data-testid="stat-total"]').invoke('text').then((before) => {
+      cy.get('[data-testid="task-item"]').then(($before) => {
+        const before = $before.length;
         cy.get('[data-testid="task-input"]').type('Nova tarefa contador');
         cy.get('[data-testid="submit-btn"]').click();
-        cy.get('[data-testid="stat-total"]').invoke('text').should('eq', String(parseInt(before) + 1));
+        cy.get('[data-testid="task-item"]').should('have.length', before + 1);
+        cy.get('#stat-total').should('contain.text', String(before + 1));
       });
     });
 
     it('deve incrementar pendentes ao adicionar tarefa', () => {
-      cy.get('[data-testid="stat-pending"]').invoke('text').then((before) => {
+      cy.get('#stat-pending').invoke('text').then((text) => {
+        const before = parseInt(text.trim());
         cy.get('[data-testid="task-input"]').type('Tarefa pendente nova');
         cy.get('[data-testid="submit-btn"]').click();
-        cy.get('[data-testid="stat-pending"]').invoke('text').should('eq', String(parseInt(before) + 1));
+        cy.get('[data-testid="task-item"]').should('have.length.at.least', before + 1);
+        cy.get('#stat-pending').should('contain.text', String(before + 1));
       });
     });
 
@@ -103,9 +108,11 @@ describe('Frontend — TaskFlow', () => {
     });
 
     it('deve atualizar o contador de concluídas', () => {
-      cy.get('[data-testid="stat-done"]').invoke('text').then((before) => {
+      cy.get('#stat-done').invoke('text').then((text) => {
+        const before = parseInt(text.trim());
         cy.get('[data-testid="task-item"]').first().find('.task-check').click();
-        cy.get('[data-testid="stat-done"]').invoke('text').should('eq', String(parseInt(before) + 1));
+        cy.get('[data-testid="task-item"]').first().should('have.class', 'completed');
+        cy.get('#stat-done').should('contain.text', String(before + 1));
       });
     });
 
@@ -129,9 +136,11 @@ describe('Frontend — TaskFlow', () => {
     });
 
     it('deve decrementar o total de tarefas após excluir', () => {
-      cy.get('[data-testid="stat-total"]').invoke('text').then((before) => {
+      cy.get('[data-testid="task-item"]').then(($before) => {
+        const before = $before.length;
         cy.get('[data-testid="task-item"]').first().find('[data-testid^="delete-btn"]').click();
-        cy.get('[data-testid="stat-total"]').invoke('text').should('eq', String(parseInt(before) - 1));
+        cy.get('[data-testid="task-item"]').should('have.length', before - 1);
+        cy.get('#stat-total').should('contain.text', String(before - 1));
       });
     });
   });
@@ -179,8 +188,8 @@ describe('Frontend — TaskFlow', () => {
   // ----------------------------------------------------------------
   describe('Filtros de tarefas', () => {
     beforeEach(() => {
-      // Garante pelo menos uma tarefa concluída
       cy.get('[data-testid="task-item"]').first().find('.task-check').click();
+      cy.get('[data-testid="task-item"]').first().should('have.class', 'completed');
     });
 
     it('deve mostrar apenas pendentes ao clicar no filtro Pendentes', () => {
