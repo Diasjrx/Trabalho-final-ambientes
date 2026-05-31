@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-mark">T</span>
+        <span class="logo-text">TaskFlow</span>
+      </div>
+      <div id="status-badge" class="status-badge offline">
+        <span class="status-dot"></span>
+        <span class="status-label">Conectando...</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="hero">
+      <h1 class="hero-title">Gerencie suas<br /><em>tarefas</em> com precisão</h1>
+      <p class="hero-sub">Aplicação fullstack com Node.js + Express + Cypress</p>
+    </section>
+
+    <div class="app-grid">
+      <!-- Form Panel -->
+      <div class="panel form-panel">
+        <div class="panel-header">
+          <span class="panel-tag">01</span>
+          <h2>Nova Tarefa</h2>
+        </div>
+        <form id="task-form" class="task-form" onsubmit="handleSubmit(event)">
+          <div class="input-wrap">
+            <input
+              id="task-input"
+              type="text"
+              placeholder="Descreva sua tarefa..."
+              autocomplete="off"
+              data-testid="task-input"
+            />
+            <label for="task-input">Título da tarefa</label>
+          </div>
+          <button type="submit" id="submit-btn" data-testid="submit-btn">
+            <span>Adicionar</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </form>
+        <div id="form-message" class="form-message" role="alert" aria-live="polite"></div>
+      </div>
+
+      <!-- Stats Panel -->
+      <div class="panel stats-panel">
+        <div class="panel-header">
+          <span class="panel-tag">02</span>
+          <h2>Resumo</h2>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card" data-testid="stat-total">
+            <span class="stat-num" id="stat-total">0</span>
+            <span class="stat-lbl">Total</span>
+          </div>
+          <div class="stat-card" data-testid="stat-pending">
+            <span class="stat-num" id="stat-pending">0</span>
+            <span class="stat-lbl">Pendentes</span>
+          </div>
+          <div class="stat-card" data-testid="stat-done">
+            <span class="stat-num" id="stat-done">0</span>
+            <span class="stat-lbl">Concluídas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task List -->
+    <div class="panel list-panel">
+      <div class="panel-header">
+        <span class="panel-tag">03</span>
+        <h2>Lista de Tarefas</h2>
+        <div class="filter-bar">
+          <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todas</button>
+          <button class="filter-btn" data-filter="pending" onclick="setFilter('pending')">Pendentes</button>
+          <button class="filter-btn" data-filter="done" onclick="setFilter('done')">Concluídas</button>
+        </div>
+      </div>
+      <div id="task-list" class="task-list" data-testid="task-list">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Carregando tarefas...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>TaskFlow &mdash; Fullstack App &bull; HTML + CSS + JS + ExpressJS + Cypress</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Edit Modal -->
+  <div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Tarefa</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <input id="edit-input" type="text" class="edit-input" data-testid="edit-input" />
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-save" id="btn-save" data-testid="btn-save" onclick="saveEdit()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

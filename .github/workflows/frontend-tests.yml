@@ -1,0 +1,55 @@
+name: Testes Frontend (Cypress)
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  test-frontend:
+    name: Cypress — Frontend E2E
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências raiz (Cypress)
+        run: npm install
+
+      - name: Instalar dependências do backend
+        run: cd backend && npm install
+
+      - name: Iniciar backend em segundo plano
+        run: cd backend && node index.js &
+        env:
+          PORT: 3001
+
+      - name: Aguardar backend iniciar
+        run: npx wait-on http://localhost:3001/health --timeout 30000
+
+      - name: Servir frontend com http-server
+        run: npx http-server frontend -p 3000 -c-1 &
+
+      - name: Aguardar frontend iniciar
+        run: npx wait-on http://localhost:3000 --timeout 30000
+
+      - name: Executar testes Cypress do Frontend
+        run: npx cypress run --spec "cypress/e2e/frontend.cy.js"
+        env:
+          CYPRESS_apiUrl: http://localhost:3001
+
+      - name: Upload de screenshots (em caso de falha)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-frontend
+          path: cypress/screenshots
+          if-no-files-found: ignore
