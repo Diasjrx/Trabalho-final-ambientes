@@ -1,25 +1,15 @@
 // cypress/e2e/frontend.cy.js
-// Testes E2E do Frontend — TaskFlow
-
-const FRONTEND = Cypress.env('frontendUrl') || 'http://localhost:3000';
-const API      = Cypress.env('apiUrl')      || 'http://localhost:3001';
-
-// Helper: lê apenas o número do stat (primeiro filho span)
-const getStatNum = (id) =>
-  cy.get(`#${id}`).find('.stat-num').invoke('text').then((t) => parseInt(t.trim()));
+const FRONTEND = 'http://localhost:3000';
+const API      = Cypress.env('apiUrl') || 'http://localhost:3001';
 
 describe('Frontend — TaskFlow', () => {
 
   beforeEach(() => {
     cy.request('POST', `${API}/reset`);
     cy.visit(FRONTEND);
-    // Aguarda lista carregar antes de cada teste
     cy.get('[data-testid="task-item"]', { timeout: 10000 }).should('have.length.at.least', 1);
   });
 
-  // ----------------------------------------------------------------
-  // CARREGAMENTO DA PÁGINA
-  // ----------------------------------------------------------------
   describe('Carregamento inicial', () => {
     it('deve carregar a página com o título correto', () => {
       cy.title().should('include', 'TaskFlow');
@@ -50,14 +40,11 @@ describe('Frontend — TaskFlow', () => {
 
     it('deve mostrar o total correto de tarefas', () => {
       cy.get('[data-testid="task-item"]').then(($items) => {
-        cy.get('#stat-total').find('.stat-num').should('contain.text', String($items.length));
+        cy.get('#stat-total').should('have.text', String($items.length));
       });
     });
   });
 
-  // ----------------------------------------------------------------
-  // ADICIONAR TAREFA
-  // ----------------------------------------------------------------
   describe('Adicionar tarefa', () => {
     it('deve adicionar uma nova tarefa ao preencher o formulário', () => {
       cy.get('[data-testid="task-input"]').type('Tarefa criada no teste E2E');
@@ -77,16 +64,17 @@ describe('Frontend — TaskFlow', () => {
         cy.get('[data-testid="task-input"]').type('Nova tarefa contador');
         cy.get('[data-testid="submit-btn"]').click();
         cy.get('[data-testid="task-item"]').should('have.length', before + 1);
-        cy.get('#stat-total').find('.stat-num').should('contain.text', String(before + 1));
+        cy.get('#stat-total').should('have.text', String(before + 1));
       });
     });
 
     it('deve incrementar pendentes ao adicionar tarefa', () => {
-      getStatNum('stat-pending').then((before) => {
+      cy.get('#stat-pending').invoke('text').then((t) => {
+        const before = parseInt(t.trim());
         cy.get('[data-testid="task-input"]').type('Tarefa pendente nova');
         cy.get('[data-testid="submit-btn"]').click();
         cy.contains('Tarefa pendente nova').should('be.visible');
-        cy.get('#stat-pending').find('.stat-num').should('contain.text', String(before + 1));
+        cy.get('#stat-pending').should('have.text', String(before + 1));
       });
     });
 
@@ -101,9 +89,6 @@ describe('Frontend — TaskFlow', () => {
     });
   });
 
-  // ----------------------------------------------------------------
-  // MARCAR COMO CONCLUÍDA
-  // ----------------------------------------------------------------
   describe('Marcar tarefa como concluída', () => {
     it('deve marcar a primeira tarefa como concluída', () => {
       cy.get('[data-testid="task-item"]').first().find('.task-check').click();
@@ -111,10 +96,11 @@ describe('Frontend — TaskFlow', () => {
     });
 
     it('deve atualizar o contador de concluídas', () => {
-      getStatNum('stat-done').then((before) => {
+      cy.get('#stat-done').invoke('text').then((t) => {
+        const before = parseInt(t.trim());
         cy.get('[data-testid="task-item"]').first().find('.task-check').click();
         cy.get('[data-testid="task-item"]').first().should('have.class', 'completed');
-        cy.get('#stat-done').find('.stat-num').should('contain.text', String(before + 1));
+        cy.get('#stat-done').should('have.text', String(before + 1));
       });
     });
 
@@ -126,9 +112,6 @@ describe('Frontend — TaskFlow', () => {
     });
   });
 
-  // ----------------------------------------------------------------
-  // EXCLUIR TAREFA
-  // ----------------------------------------------------------------
   describe('Excluir tarefa', () => {
     it('deve excluir a primeira tarefa ao clicar no botão de exclusão', () => {
       cy.get('[data-testid="task-item"]').first().find('[data-testid^="task-title"]').invoke('text').then((title) => {
@@ -142,14 +125,11 @@ describe('Frontend — TaskFlow', () => {
         const before = $before.length;
         cy.get('[data-testid="task-item"]').first().find('[data-testid^="delete-btn"]').click();
         cy.get('[data-testid="task-item"]').should('have.length', before - 1);
-        cy.get('#stat-total').find('.stat-num').should('contain.text', String(before - 1));
+        cy.get('#stat-total').should('have.text', String(before - 1));
       });
     });
   });
 
-  // ----------------------------------------------------------------
-  // EDITAR TAREFA
-  // ----------------------------------------------------------------
   describe('Editar tarefa', () => {
     it('deve abrir o modal de edição ao clicar no botão editar', () => {
       cy.get('[data-testid="task-item"]').first().find('[data-testid^="edit-btn"]').click();
@@ -185,9 +165,6 @@ describe('Frontend — TaskFlow', () => {
     });
   });
 
-  // ----------------------------------------------------------------
-  // FILTROS
-  // ----------------------------------------------------------------
   describe('Filtros de tarefas', () => {
     beforeEach(() => {
       cy.get('[data-testid="task-item"]').first().find('.task-check').click();
