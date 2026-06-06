@@ -2,7 +2,7 @@
    TASKFLOW — Frontend App Logic
    ============================================= */
 
-const API = 'http://localhost:3001';
+const API = 'http://localhost:3001'; 
 let allTasks = [];
 let currentFilter = 'all';
 let editingId = null;
